@@ -27,7 +27,7 @@ pub struct SimHost {
     budget_limits: Option<(u64, u64)>,
     calibration: Option<crate::types::ResourceCalibration>,
     memory_limit: Option<u64>,
-    _pending_events: Vec<String>,
+    pending_events: Vec<String>,
 }
 
 impl SimHost {
@@ -63,7 +63,7 @@ impl SimHost {
             budget_limits,
             calibration,
             memory_limit,
-            _pending_events: Vec::new(),
+            pending_events: Vec::new(),
         }
     }
 
@@ -85,7 +85,7 @@ impl SimHost {
             budget_limits,
             calibration,
             memory_limit,
-            _pending_events: Vec::new(),
+            pending_events: Vec::new(),
         })
     }
 
@@ -152,20 +152,24 @@ impl SimHost {
     }
 
     /// Set the contract ID for execution context.
-    pub fn _set_contract_id(&mut self, _id: Hash) {}
+    #[allow(dead_code)]
+    pub fn set_contract_id(&mut self, _id: Hash) {}
 
     /// Set the function name to invoke.
-    pub fn _set_fn_name(&mut self, _name: &str) -> Result<(), HostError> {
+    #[allow(dead_code)]
+    pub fn set_fn_name(&mut self, _name: &str) -> Result<(), HostError> {
         Ok(())
     }
 
     /// Convert a u32 to a Soroban Val.
-    pub fn _val_from_u32(&self, v: u32) -> Val {
+    #[allow(dead_code)]
+    pub fn val_from_u32(&self, v: u32) -> Val {
         Val::from_u32(v).into()
     }
 
     /// Convert a Val back to u32.
-    pub fn _val_to_u32(&self, v: Val) -> Result<u32, HostError> {
+    #[allow(dead_code)]
+    pub fn val_to_u32(&self, v: Val) -> Result<u32, HostError> {
         v.try_into_val(&self.inner).map_err(|_| {
             EnvError::from_type_and_code(ScErrorType::Value, ScErrorCode::InvalidInput).into()
         })
@@ -174,10 +178,11 @@ impl SimHost {
     /// Buffer a contract event for inclusion in the next snapshot.
     ///
     /// Call this from the simulation loop each time an event is emitted so that
-    /// `_drain_events_for_snapshot` can associate the right events with each
+    /// `drain_events_for_snapshot` can associate the right events with each
     /// snapshot window.
-    pub fn _push_event(&mut self, event: String) {
-        self._pending_events.push(event);
+    #[allow(dead_code)]
+    pub fn push_event(&mut self, event: String) {
+        self.pending_events.push(event);
     }
 
     /// Return all events buffered since the last snapshot and clear the buffer.
@@ -185,8 +190,9 @@ impl SimHost {
     /// The returned `Vec` is moved into the `events` field of the `StateSnapshot`
     /// being constructed.  After this call the buffer is empty and ready for the
     /// next snapshot window.
-    pub fn _drain_events_for_snapshot(&mut self) -> Vec<String> {
-        std::mem::take(&mut self._pending_events)
+    #[allow(dead_code)]
+    pub fn drain_events_for_snapshot(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.pending_events)
     }
 }
 
@@ -211,9 +217,9 @@ mod tests {
         let mut host = SimHost::new(None, None, None);
         // Test setting contract ID (dummy hash)
         let hash = Hash([0u8; 32]);
-        host._set_contract_id(hash);
+        host.set_contract_id(hash);
 
-        host._set_fn_name("add")
+        host.set_fn_name("add")
             .expect("failed to set function name");
     }
 
@@ -221,11 +227,11 @@ mod tests {
     fn test_simple_value_handling() {
         let host = SimHost::new(None, None, None);
 
-        let val_a = host._val_from_u32(10);
-        let val_b = host._val_from_u32(20);
+        let val_a = host.val_from_u32(10);
+        let val_b = host.val_from_u32(20);
 
-        let res_a = host._val_to_u32(val_a).expect("conversion failed");
-        let res_b = host._val_to_u32(val_b).expect("conversion failed");
+        let res_a = host.val_to_u32(val_a).expect("conversion failed");
+        let res_b = host.val_to_u32(val_b).expect("conversion failed");
 
         assert_eq!(res_a + res_b, 30);
     }
