@@ -16,7 +16,6 @@ repos:
       - id: go-imports
         name: goimports (auto-format)
         description: Runs goimports to fix imports and formatting in Go files
-
   # ──────────────────────────────────────────────
   # Go linting: golangci-lint (strict)
   # ──────────────────────────────────────────────
@@ -29,7 +28,6 @@ repos:
           - --config=.golangci.yml
           - --max-issues-per-linter=0
           - --max-same-issues=0
-
   # ──────────────────────────────────────────────
   # Local hooks: go vet, cargo fmt, cargo clippy
   # ──────────────────────────────────────────────
