@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -29,7 +28,6 @@ func TestChunkKeys_Empty(t *testing.T) {
 
 func TestChunkKeys_BelowBatchSize(t *testing.T) {
 	keys := makeKeys(t, 50)
-	keys := makeKeys(50)
 	chunks := chunkKeys(keys, batchSize)
 	require.Len(t, chunks, 1)
 	assert.Equal(t, keys, chunks[0])
@@ -37,7 +35,6 @@ func TestChunkKeys_BelowBatchSize(t *testing.T) {
 
 func TestChunkKeys_ExactBatchSize(t *testing.T) {
 	keys := makeKeys(t, batchSize)
-	keys := makeKeys(batchSize)
 	chunks := chunkKeys(keys, batchSize)
 	require.Len(t, chunks, 1)
 	assert.Len(t, chunks[0], batchSize)
@@ -45,7 +42,6 @@ func TestChunkKeys_ExactBatchSize(t *testing.T) {
 
 func TestChunkKeys_MultipleBatches(t *testing.T) {
 	keys := makeKeys(t, 250)
-	keys := makeKeys(250)
 	chunks := chunkKeys(keys, batchSize)
 	// 250 keys → 3 chunks: 100, 100, 50
 	require.Len(t, chunks, 3)
@@ -56,7 +52,6 @@ func TestChunkKeys_MultipleBatches(t *testing.T) {
 
 func TestChunkKeys_PreservesOrder(t *testing.T) {
 	keys := makeKeys(t, 150)
-	keys := makeKeys(150)
 	chunks := chunkKeys(keys, batchSize)
 	require.Len(t, chunks, 2)
 
@@ -69,7 +64,6 @@ func TestChunkKeys_PreservesOrder(t *testing.T) {
 
 func TestChunkKeys_NegativeSize_FallsBackToDefault(t *testing.T) {
 	keys := makeKeys(t, 10)
-	keys := makeKeys(10)
 	chunks := chunkKeys(keys, -1)
 	// -1 falls back to batchSize (100), so 10 keys → 1 chunk
 	require.Len(t, chunks, 1)
@@ -91,7 +85,6 @@ func TestBatchGetLedgerEntries_EmptyInput(t *testing.T) {
 // TestBatchGetLedgerEntries_SmallFootprint delegates to GetLedgerEntries directly.
 func TestBatchGetLedgerEntries_SmallFootprint(t *testing.T) {
 	keys := makeKeys(t, 10)
-	keys := makeKeys(10)
 	srv := newMockSorobanServer(t, keys)
 	defer srv.Close()
 
@@ -104,7 +97,6 @@ func TestBatchGetLedgerEntries_SmallFootprint(t *testing.T) {
 // TestBatchGetLedgerEntries_LargeFootprint batches keys over the threshold.
 func TestBatchGetLedgerEntries_LargeFootprint(t *testing.T) {
 	keys := makeKeys(t, 250)
-	keys := makeKeys(250)
 	srv := newMockSorobanServer(t, keys)
 	defer srv.Close()
 
@@ -118,7 +110,6 @@ func TestBatchGetLedgerEntries_LargeFootprint(t *testing.T) {
 // which must take the single-request path.
 func TestBatchGetLedgerEntries_ExactThreshold(t *testing.T) {
 	keys := makeKeys(t, largFootprintThreshold)
-	keys := makeKeys(largFootprintThreshold)
 	srv := newMockSorobanServer(t, keys)
 	defer srv.Close()
 
@@ -131,7 +122,6 @@ func TestBatchGetLedgerEntries_ExactThreshold(t *testing.T) {
 // TestBatchGetLedgerEntries_OneBeyondThreshold forces the batching path.
 func TestBatchGetLedgerEntries_OneBeyondThreshold(t *testing.T) {
 	keys := makeKeys(t, largFootprintThreshold+1)
-	keys := makeKeys(largFootprintThreshold + 1)
 	srv := newMockSorobanServer(t, keys)
 	defer srv.Close()
 
@@ -144,7 +134,6 @@ func TestBatchGetLedgerEntries_OneBeyondThreshold(t *testing.T) {
 // TestBatchGetLedgerEntries_ServerError propagates an error from a failing batch.
 func TestBatchGetLedgerEntries_ServerError(t *testing.T) {
 	keys := makeKeys(t, 150)
-	keys := makeKeys(150)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":1,"error":{"code":-32000,"message":"server error"}}`))
@@ -159,7 +148,6 @@ func TestBatchGetLedgerEntries_ServerError(t *testing.T) {
 // TestBatchGetLedgerEntries_ContextCancelled respects context cancellation.
 func TestBatchGetLedgerEntries_ContextCancelled(t *testing.T) {
 	keys := makeKeys(t, 200)
-	keys := makeKeys(200)
 	srv := newMockSorobanServer(t, keys)
 	defer srv.Close()
 
@@ -179,7 +167,6 @@ func TestBatchGetLedgerEntries_ContextCancelled(t *testing.T) {
 // deterministic ContractCode keys seeded by index.
 func makeKeys(t *testing.T, n int) []string {
 	t.Helper()
-func makeKeys(n int) []string {
 	keys := make([]string, n)
 	for i := range keys {
 		var hash xdr.Hash
@@ -195,9 +182,6 @@ func makeKeys(n int) []string {
 		}
 		b, err := key.MarshalBinary()
 		require.NoError(t, err)
-		if err != nil {
-			panic(fmt.Sprintf("makeKeys: failed to marshal key %d: %v", i, err))
-		}
 		keys[i] = base64.StdEncoding.EncodeToString(b)
 	}
 	return keys
