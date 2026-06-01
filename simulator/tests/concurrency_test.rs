@@ -58,7 +58,7 @@ fn test_concurrency_source_map_cache() {
                         .unwrap_or_else(|err| panic!("failed to store cache entry: {err:?}"));
                 } else {
                     // Read
-                    let _ = cache.get(&wasm_hash, false);
+                    let _ = cache.get(wasm_hash.as_str(), false);
                 }
 
                 // Small sleep to increase chance of contention
@@ -76,7 +76,7 @@ fn test_concurrency_source_map_cache() {
 
     // Final state should be readable
     let final_entry = cache
-        .get(&wasm_hash, false)
+        .get(wasm_hash.as_str(), false)
         .unwrap_or_else(|| panic!("failed to retrieve final cache entry"));
     assert_eq!(final_entry.wasm_hash, wasm_hash);
 }
