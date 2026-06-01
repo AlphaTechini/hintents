@@ -76,7 +76,7 @@ fn test_concurrency_source_map_cache() {
 
     // Final state should be readable
     let final_entry = cache
-        .get(wasm_hash, false)
-        .unwrap_or_else(|err| panic!("failed to retrieve final cache entry: {err:?}"));
+        .get(&wasm_hash, false)
+        .unwrap_or_else(|| panic!("failed to retrieve final cache entry"));
     assert_eq!(final_entry.wasm_hash, wasm_hash);
 }
