@@ -361,10 +361,8 @@ fn main() {
 
     let mut buffer = String::new();
     if let Err(e) = io::stdin().read_to_string(&mut buffer) {
-        let _err_msg = format!("Failed to read stdin: {e}");
         let res = SimulationResponse {
             status: "error".to_string(),
-            //             error: Some(err_msg.clone()),
             error: Some(format!("Failed to read stdin: {e}")),
             error_code: None,
             lcov_report: None,
@@ -381,7 +379,6 @@ fn main() {
             wasm_offset: None,
             linear_memory_dump: None,
         };
-        println!("{}", serde_json::to_string(&res).unwrap());
         tracing::error!("Failed to read stdin: {}", e);
         if let Ok(json) = serde_json::to_string(&res) {
             println!("{}", json);
@@ -389,7 +386,6 @@ fn main() {
             eprintln!("Failed to serialize error response");
             println!("{{\"status\": \"error\", \"error\": \"Internal serialization error\"}}");
         }
-        eprintln!("Failed to read stdin: {e}");
         return;
     }
 
@@ -452,29 +448,21 @@ fn main() {
     let _result_meta = if request.result_meta_xdr.is_empty() {
         tracing::warn!("ResultMetaXdr is empty; host storage will be empty");
         None
-    eprintln!(
-        "Debug: Received ResultMetaXdr len: {}",
-        request.result_meta_xdr.len()
-    );
-
-    if request.result_meta_xdr.is_empty() {
-        eprintln!("Warning: ResultMetaXdr is empty. Host storage may be incomplete.");
     } else {
         match base64::engine::general_purpose::STANDARD.decode(&request.result_meta_xdr) {
             Ok(bytes) => {
                 if bytes.is_empty() {
-                    eprintln!("Warning: ResultMetaXdr decoded to 0 bytes.");
+                    tracing::warn!("ResultMeta decoded to 0 bytes");
+                    None
                 } else {
                     match soroban_env_host::xdr::TransactionResultMeta::from_xdr(
                         &bytes,
                         soroban_env_host::xdr::Limits::none(),
                     ) {
-                        Ok(_) => {}
+                        Ok(meta) => Some(meta),
                         Err(e) => {
-                            eprintln!(
-                                "Warning: Failed to parse ResultMeta XDR: {}. Proceeding with empty storage.",
-                                e
-                            );
+                            tracing::warn!("Failed to parse ResultMeta XDR: {}", e);
+                            None
                         }
                     }
                 }
@@ -482,7 +470,6 @@ fn main() {
             Err(e) => {
                 tracing::warn!("Failed to decode ResultMeta base64, proceeding with empty storage: {}", e);
                 None
-                eprintln!("Warning: Failed to decode ResultMeta Base64: {e}. Proceeding with empty storage.");
             }
         }
     };
@@ -500,16 +487,11 @@ fn main() {
                     Some(mapper)
                 } else {
                     tracing::info!("No debug symbols found in WASM");
-                    eprintln!("Debug symbols found in WASM. SourceMapper initialized.");
-                    Some(mapper)
-                } else {
-                    eprintln!("No debug symbols found in WASM. SourceMapper not used.");
                     None
                 }
             }
             Err(e) => {
                 tracing::warn!("Failed to decode WASM base64: {}", e);
-                eprintln!("Failed to decode WASM base64: {e}");
                 None
             }
         }
