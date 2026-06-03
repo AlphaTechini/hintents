@@ -125,7 +125,7 @@ func FixProtocolRegistration(verbose bool) error {
 		if err := json.Unmarshal(data, &registry); err != nil {
 			// Corrupted - back up and recreate
 			backupFile := registryFile + ".backup"
-			if err := os.WriteFile(backupFile, data, 0644); err != nil {
+			if err := os.WriteFile(backupFile, data, 0644); err != nil { //nolint:gosec // internally-constructed backup path
 				return fmt.Errorf("failed to backup corrupted registry: %w", err)
 			}
 			fmt.Printf("  ⚠ Corrupted registry backed up to: %s\n", backupFile)

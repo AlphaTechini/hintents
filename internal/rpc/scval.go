@@ -56,6 +56,9 @@ func ScValToGoValue(v xdr.ScVal) (interface{}, error) {
 		if v.Error == nil {
 			return ScValError{}, nil
 		}
+		if v.Error.Type < 0 {
+			return ScValError{}, fmt.Errorf("invalid ScError type: negative value %d", v.Error.Type)
+		}
 		return ScValError{
 			Type: uint32(v.Error.Type),
 			Code: scErrorCode(v.Error),

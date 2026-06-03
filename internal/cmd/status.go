@@ -265,15 +265,18 @@ func repairProtocolDarwin(cliPath string, out io.Writer) error {
 
 	// Unload existing plist if present (ignore errors — may not be loaded)
 	fmt.Fprintln(out, "  Unloading existing plist (if any)...")
-	_ = exec.Command("launchctl", "unload", plistPath).Run()
+	_ = exec.Command("launchctl", "unload", plistPath).Run() //nolint:gosec // internally-constructed plist path
 
 	fmt.Fprintln(out, "  Writing plist file...")
-	if err := os.WriteFile(plistPath, []byte(plistContent), 0644); err != nil {
+	if err := os.WriteFile(plistPath, []byte(plistContent), 0644); err != nil { //nolint:gosec // internally-constructed plist path
 		return fmt.Errorf("cannot write plist: %w", err)
 	}
 
 	fmt.Fprintln(out, "  Loading plist via launchctl...")
-	if output, err := exec.Command("launchctl", "load", plistPath).CombinedOutput(); err != nil {
+	if !filepath.IsAbs(plistPath) || strings.Contains(plistPath, "..") {
+		return fmt.Errorf("invalid plist path: must be absolute without traversal")
+	}
+	if output, err := exec.Command("launchctl", "load", plistPath).CombinedOutput(); err != nil { //nolint:gosec // path validated above
 		return fmt.Errorf("launchctl load failed: %w\n%s", err, string(output))
 	}
 

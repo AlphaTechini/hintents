@@ -78,7 +78,13 @@ func (p *NetworkBaselineProvider) FetchBaselines(ctx context.Context) (*Baseline
 		return &DefaultBaselines, nil
 	}
 	b := resp.BudgetUsage
-	avgFee := BaseFeeStroops + int64(b.CPUInstructions/CPUStroopsPerUnit) + int64(b.MemoryBytes/MemStroopsPerUnit)
+	const maxInt64 = 1<<63 - 1
+	cpuCost := b.CPUInstructions / CPUStroopsPerUnit
+	memCost := b.MemoryBytes / MemStroopsPerUnit
+	if cpuCost > uint64(maxInt64) || memCost > uint64(maxInt64) {
+		return nil, fmt.Errorf("budget usage overflow: values exceed int64 range")
+	}
+	avgFee := BaseFeeStroops + int64(cpuCost) + int64(memCost)
 	return &Baselines{
 		AvgCPUPerOp:    b.CPUInstructions,
 		AvgMemoryPerOp: b.MemoryBytes,

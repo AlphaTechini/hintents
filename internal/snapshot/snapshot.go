@@ -68,7 +68,12 @@ func ComputeFingerprint(snap *Snapshot) string {
 
 // writeFramed writes a length-prefixed byte slice into w.
 func writeFramed(w interface{ Write([]byte) (int, error) }, buf []byte, data []byte) {
-	n := uint32(len(data))
+	dataLen := len(data)
+	if dataLen < 0 || dataLen > 0xFFFFFFFF {
+		log.Printf("writeFramed: data length %d exceeds 32-bit frame limit, skipping", dataLen)
+		return
+	}
+	n := uint32(dataLen)
 	buf[0] = byte(n >> 24)
 	buf[1] = byte(n >> 16)
 	buf[2] = byte(n >> 8)

@@ -128,7 +128,7 @@ func runSimulationProfile(cmd *cobra.Command) error {
 		if err != nil {
 			return fmt.Errorf("failed to marshal report to JSON: %w", err)
 		}
-		if err := os.WriteFile(profileOutJSON, data, 0644); err != nil {
+		if err := os.WriteFile(profileOutJSON, data, 0644); err != nil { //nolint:gosec // user-specified output path via CLI flag
 			return fmt.Errorf("failed to write JSON report: %w", err)
 		}
 		fmt.Printf("\n[OK] Optimization report exported to: %s\n", profileOutJSON)

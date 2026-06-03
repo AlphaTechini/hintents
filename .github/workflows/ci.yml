@@ -131,7 +131,7 @@ jobs:
           args: --config=.golangci.yml --timeout=5m
 
       - name: Run gosec
-        if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.23'
+        if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.25.0'
         uses: securego/gosec@master
         with:
           args: "-severity high ./..."
@@ -139,19 +139,25 @@ jobs:
       - name: Run tests
         run: go test -v -race ./...
 
+      - name: Run benchmarks
+        if: matrix.os == 'ubuntu-latest'
+        run: go test ./internal/rpc -bench=BenchmarkLedgerKeyHashing -benchmem -run=^$
+
+      - name: Generate coverage
+        run: go test ./internal/rpc -coverprofile=coverage.out -covermode=atomic
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.out
+          flags: ${{ matrix.os }}
+          name: codecov-${{ matrix.os }}
+
       - name: Build
         run: go build -v ./...
 
       - name: Build erst binary for integration tests
         run: go build -o erst ./cmd/erst
-
-      - name: Run tests (race)
-        if: matrix.os == 'ubuntu-latest'
-        run: go test -v -race ./...
-
-      - name: Run tests (compile-only)
-        if: matrix.os != 'ubuntu-latest'
-        run: go test -short -run '^$' -v ./...
 
   # ============================================
   # Cross-Platform CLI Binary Integration

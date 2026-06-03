@@ -210,10 +210,15 @@ func budgetToGasEstimation(b *BudgetUsage) (*GasEstimation, error) {
 // estimateFeeFromUsage computes a conservative fee estimate (stroops) from raw
 // CPU and memory consumption.
 func estimateFeeFromUsage(cpuInsns, memBytes uint64) (int64, error) {
-	cpu := int64(cpuInsns / CPUStroopsPerUnit)
-	mem := int64(memBytes / MemStroopsPerUnit)
-	if cpu < 0 || mem < 0 {
-		return 0, errors.WrapSimulationLogicError("invalid budget usage: negative derived cost")
+	cpuQuotient := cpuInsns / CPUStroopsPerUnit
+	memQuotient := memBytes / MemStroopsPerUnit
+
+	const maxInt64 = 1<<63 - 1
+	if cpuQuotient > uint64(maxInt64) || memQuotient > uint64(maxInt64) {
+		return 0, errors.WrapSimulationLogicError("budget usage overflow: values exceed int64 range")
 	}
+
+	cpu := int64(cpuQuotient)
+	mem := int64(memQuotient)
 	return BaseFeeStroops + cpu + mem, nil
 }

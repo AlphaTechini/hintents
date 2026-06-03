@@ -204,7 +204,7 @@ func ensureGitignoreBlock(path, block string) error {
 	}
 	content += "\n" + block
 
-	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil { //nolint:gosec // internally-constructed .gitignore path
 		return fmt.Errorf("failed to update .gitignore: %w", err)
 	}
 	return nil
